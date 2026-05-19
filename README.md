@@ -127,4 +127,4 @@ MIT — see [`LICENSE`](LICENSE). The Kaggle datasets retain their own licences 
 ## 7. Reproducibility link
 
 This directory is the **reproducibility artefact** referenced in the manuscript:
-<https://github.com/rogerpanel/CV/tree/main/SODE-Guard>
+<https://github.com/rogerpanel/SODE-ExtractGuard-Models/
