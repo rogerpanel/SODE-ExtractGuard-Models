@@ -1,0 +1,323 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{setspace}
+\setstretch{1.15}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue!70!black, citecolor=green!50!black, urlcolor=blue!60!black}
+\usepackage[numbers,sort&compress]{natbib}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}{Remark}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\calG}{\mathcal{G}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calO}{\mathcal{O}}
+\newcommand{\norm}[1]{\left\|#1\right\|}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\begin{document}
+
+\begin{center}
+{\LARGE \textbf{Postdoctoral Research Proposal}}
+
+\vspace{0.5cm}
+
+{\Large \textbf{Proposal 5 of 6}}
+
+\vspace{1cm}
+
+{\huge \textbf{ODE-ExtractGuard: Neural ODE-Based Behavioral Fingerprinting on Dynamic API Interaction Graphs for Certified Detection of Model Extraction Attacks}}
+
+\vspace{1cm}
+
+{\large \textbf{Principal Investigator:} Dr.\ Roger Nick Anaedevha}
+
+\vspace{0.3cm}
+
+{\large \textbf{Date:} April 2026}
+
+\vspace{0.3cm}
+
+{\large \textbf{Duration:} 24 months}
+
+\vspace{0.3cm}
+
+{\large \textbf{Field:} API Security $\times$ Model IP Protection $\times$ Neural ODEs $\times$ GNNs}
+
+\end{center}
+
+\vspace{1cm}
+\hrule
+\vspace{0.5cm}
+
+\tableofcontents
+
+\newpage
+
+% ============================================================
+\section{Executive Summary}
+% ============================================================
+
+Model extraction---stealing the functionality, weights, or training data of ML models through API queries---has become an OWASP Top-10 LLM vulnerability (LLM10). Recent work demonstrated extraction of projection-layer information from GPT-3.5-turbo, and combining multi-faceted API access doubles extraction risk even under deduplication defenses. The January 2026 ``Reprompt'' incident showed single-click model exfiltration from Microsoft Copilot in production.
+
+This proposal addresses a critical detection gap: \textbf{existing model extraction defenses operate at the output level (watermarking, perturbation) but do not analyze the temporal-relational query patterns that distinguish extraction campaigns from legitimate usage.} We propose \textbf{ODE-ExtractGuard}, which models API query streams as continuous-time dynamic interaction graphs and applies Neural ODE-based dynamics to learn behavioral fingerprints that discriminate extraction attacks from legitimate traffic with certified detection guarantees. The framework captures the unique temporal signatures of extraction campaigns: systematic decision-boundary probing, strategically structured query sequences, and multi-account coordination. Expected outcomes: $\geq$94\% detection of functional extraction, $\geq$88\% detection of training-data extraction attempts, with $<$0.1\% false positive rate at production scale, and certified robustness against adaptive evasion within perturbation radius $\epsilon = 0.1$.
+
+% ============================================================
+\section{Problem Statement and Research Gap}
+% ============================================================
+
+\subsection{The Model Extraction Threat Landscape}
+
+Model extraction has graduated from theoretical curiosity to production threat across four categories:
+
+\textbf{1. Functional Extraction:} Replicating the input-output behavior of a target model by training a surrogate on query-response pairs. Modern attacks achieve $>$90\% agreement with proprietary models using $\sim$10,000 strategically chosen queries.
+
+\textbf{2. Training-Data Extraction:} Recovering memorized training examples via carefully crafted prompts. For LLMs, this includes PII leakage, copyrighted content extraction, and knowledge-graph reconstruction.
+
+\textbf{3. Prompt/System-Prompt Inversion:} Recovering the system prompt or RAG context of a deployed LLM application, enabling downstream attacks.
+
+\textbf{4. Architecture/Weight Extraction:} Recovering model internals (embedding dimensions, layer counts, attention patterns) from API responses, as demonstrated on GPT-3.5-turbo.
+
+\subsection{The Detection Gap}
+
+Current defenses fall into three categories, all with fundamental limitations:
+
+\begin{itemize}
+    \item \textbf{Output-level defenses} (watermarking, perturbation): TransLinkGuard watermarks attention layers; CoreGuard adds structural perturbation; GuardEmb protects embeddings. These protect against post-extraction use but \textbf{do not detect the extraction itself}.
+    
+    \item \textbf{Rate limiting:} Simple query throttling is easily circumvented by distributing queries across accounts, using proxies, and mixing extraction queries with legitimate traffic.
+    
+    \item \textbf{Query analysis:} Some systems flag ``unusual'' query distributions, but use static features (perplexity, diversity) that extraction attackers can easily match to legitimate distributions. \textbf{No existing system models the temporal-relational structure of extraction campaigns.}
+\end{itemize}
+
+\subsection{Why Dynamic Graphs + Neural ODEs?}
+
+Model extraction campaigns have distinctive \textbf{temporal-relational signatures} invisible to static analysis:
+
+\begin{enumerate}
+    \item \textbf{Decision-boundary probing:} Queries cluster near model decision boundaries and systematically explore the input space---a trajectory that evolves in continuous time as the attacker refines their strategy based on responses.
+    
+    \item \textbf{Active learning patterns:} Sophisticated attackers use active learning to select maximally informative queries, creating temporal correlations between consecutive queries that depend on prior responses.
+    
+    \item \textbf{Multi-account coordination:} Distributed extraction uses multiple API keys with correlated but non-overlapping query regions, creating cross-user relational patterns visible only in a graph representation.
+    
+    \item \textbf{Strategy evolution:} Attackers adapt their query strategy over time (exploration $\to$ exploitation $\to$ verification), creating multi-scale temporal dynamics that match CT-TGNN's learnable time-constant architecture.
+\end{enumerate}
+
+% ============================================================
+\section{Research Objectives}
+% ============================================================
+
+\begin{enumerate}
+    \item \textbf{O1:} Formalize the temporal-relational structure of model extraction campaigns as continuous-time dynamic API graphs.
+    
+    \item \textbf{O2:} Develop Neural ODE-based behavioral fingerprinting that captures extraction-specific temporal signatures (boundary probing, active learning, strategy evolution).
+    
+    \item \textbf{O3:} Design \textbf{query-response graph features} that encode the relationship between queries and model outputs without revealing model internals.
+    
+    \item \textbf{O4:} Derive certified detection bounds under adversarial evasion: prove that an attacker cannot simultaneously extract the model effectively \textbf{and} evade detection within a bounded perturbation budget.
+    
+    \item \textbf{O5:} Build \textbf{ExtractBench}, a large-scale benchmark of simulated and real extraction campaigns against multiple model types (classifiers, LLMs, embedding models).
+    
+    \item \textbf{O6:} Deploy at production scale with $<$0.1\% FPR and $<$30ms detection latency per query.
+\end{enumerate}
+
+% ============================================================
+\section{Proposed Methodology}
+% ============================================================
+
+\subsection{Phase 1: API Interaction Graph with Response Topology (Months 1--5)}
+
+\subsubsection{Graph Schema}
+
+Define $\calG(t) = (V(t), E(t), \mathbf{X}(t))$ with:
+
+\textbf{Node types:}
+\begin{align}
+    V_u &: \text{API user/key nodes} \\
+    V_q &: \text{Query nodes (each API call)} \\
+    V_r &: \text{Response cluster nodes (groups of similar model outputs)} \\
+    V_d &: \text{Decision region nodes (estimated from query-response pairs)}
+\end{align}
+
+\textbf{Edge types with timestamps:}
+\begin{itemize}
+    \item \texttt{user-issues-query}$(t)$: API key to query.
+    \item \texttt{query-receives-response}$(t)$: Query to response cluster.
+    \item \texttt{query-near-query}$(t)$: Two queries with input similarity $> \theta_1$ (semantic or $\ell_2$).
+    \item \texttt{query-probes-boundary}$(t)$: Query pair straddling a decision boundary (opposite predictions with high similarity).
+    \item \texttt{user-correlates-user}: Cross-user edges when query distributions are suspiciously complementary.
+\end{itemize}
+
+\textbf{Novel feature: Decision-boundary probing graph.} We maintain a lightweight online estimate of the model's decision regions using the query-response pairs. Queries that fall near estimated boundaries are connected with special ``probing'' edges. Extraction campaigns will create dense clusters of probing edges---legitimate users generally don't probe boundaries systematically.
+
+\subsubsection{Privacy-Preserving Feature Design}
+
+Query features must not leak model internals. We design features that characterize query \textbf{patterns} without revealing model weights:
+
+\begin{equation}
+    \mathbf{x}_q = \left[\underbrace{\mathbf{e}_q^{\text{input}}}_{\text{query embedding}},\; \underbrace{H(\hat{p}(y|q))}_{\text{response entropy}},\; \underbrace{\Delta t_q}_{\text{inter-query time}},\; \underbrace{d_{\text{boundary}}(q)}_{\text{est. boundary dist.}},\; \underbrace{\text{rank}(q)}_{\text{active learning score}}\right]
+\end{equation}
+
+where $\text{rank}(q)$ measures how ``informative'' the query would be under standard active learning criteria (uncertainty sampling, query-by-committee), computed from the response characteristics.
+
+\subsection{Phase 2: Neural ODE Behavioral Fingerprinting (Months 4--10)}
+
+For each user $u$, the CT-TGNN computes a continuously-evolving behavioral fingerprint $\mathbf{h}_u(t) \in \R^{d_h}$ via:
+
+\begin{equation}
+    \frac{d\mathbf{h}_u(t)}{dt} = f_\theta\left(\mathbf{h}_u(t),\; \underbrace{\bigoplus_{q \in Q_u(t)} \alpha_{u,q}(t) \cdot \mathbf{h}_q(t)}_{\text{query behavior aggregation}},\; \underbrace{\bigoplus_{u' \in \mathcal{N}_{\text{corr}}(u)} \beta_{u,u'}(t) \cdot \mathbf{h}_{u'}(t)}_{\text{cross-user correlation}},\; t\right)
+\end{equation}
+
+The behavioral fingerprint captures:
+
+\begin{itemize}
+    \item \textbf{Query trajectory dynamics:} How the user's queries move through the input space over time. Legitimate users explore topically; extractors probe systematically.
+    
+    \item \textbf{Response utilization:} How the user's subsequent queries depend on prior responses. Extractors exhibit strong active-learning-like dependency; legitimate users show weaker, more erratic patterns.
+    
+    \item \textbf{Boundary engagement:} The fraction and temporal density of boundary-probing queries. Extractors maintain high boundary engagement; legitimate users encounter boundaries incidentally.
+    
+    \item \textbf{Strategy phases:} Multi-scale time constants (from CT-TGNN) capture the exploration $\to$ exploitation $\to$ verification temporal structure of extraction campaigns.
+\end{itemize}
+
+\textbf{Detection output:} At each time $t$, classify user $u$ as:
+\begin{equation}
+    \hat{y}_u(t) = \sigma\left(\text{MLP}\left(\mathbf{h}_u(t)\right)\right) \in \{\text{benign},\; \text{functional-extraction},\; \text{data-extraction},\; \text{prompt-inversion},\; \text{architecture-probing}\}
+\end{equation}
+
+\subsection{Phase 3: Extraction-Detection Incompatibility Theorem (Months 6--14)}
+
+\begin{theorem}[Extraction--Evasion Trade-off]
+Let $\mathcal{A}$ be a model extraction algorithm that achieves extraction fidelity $\phi = \Pr[\hat{f}(x) = f(x)] \geq 1 - \delta_{\text{ext}}$ using $n$ queries. Let $\mathcal{D}$ be ODE-ExtractGuard with Lipschitz constant $L_{\text{ODE}}$. If $\mathcal{A}$ must also evade detection (keeping detection score below $\tau$), then either:
+\begin{enumerate}
+    \item $\delta_{\text{ext}} \geq \Omega\left(\frac{1}{\sqrt{n}} \cdot \frac{\tau}{L_{\text{ODE}}}\right)$ (extraction quality degrades), or
+    \item $n \geq \Omega\left(\frac{|\mathcal{X}|^{d_{\text{eff}}}}{\epsilon^{d_{\text{eff}}}}\right)$ (query budget must increase super-polynomially)
+\end{enumerate}
+where $d_{\text{eff}}$ is the effective input dimensionality near decision boundaries and $\epsilon$ is the evasion perturbation budget.
+\end{theorem}
+
+\textbf{Intuition:} To extract a model effectively, the attacker must sample near decision boundaries. To evade boundary-engagement detection, the attacker must add ``cover'' queries away from boundaries. But these cover queries are wasted (low information gain), forcing the attacker to use more total queries. The Lipschitz certification ensures that the boundary-engagement signal cannot be masked by small perturbations to individual queries.
+
+This is the \textbf{first formal impossibility result linking extraction effectiveness to detection evasion} in a graph-based detection framework.
+
+\subsection{Phase 4: Production System and Benchmark (Months 12--22)}
+
+\subsubsection{ExtractBench Construction}
+
+\begin{itemize}
+    \item \textbf{Target models:} 50 classifiers (image, text, tabular) + 10 LLMs (7B--70B) + 5 embedding models.
+    \item \textbf{Extraction methods:} KnockoffNets, ActiveThief, JBDA, CloudLeak, MixThief, LLM-specific methods (logit-based, distillation-based, prompt-inversion).
+    \item \textbf{Evasion strategies:} Cover queries, timing randomization, multi-account distribution, mimicry of legitimate distributions.
+    \item \textbf{Legitimate traffic:} 10M+ real API queries from production deployments (anonymized).
+    \item \textbf{Labels:} Per-query and per-user-session labels with extraction type classification.
+\end{itemize}
+
+% ============================================================
+\section{Datasets and Resources}
+% ============================================================
+
+\begin{table}[H]
+\centering
+\caption{Datasets and Resources}
+\begin{tabularx}{\textwidth}{@{}lXl@{}}
+\toprule
+\textbf{Dataset} & \textbf{Description} & \textbf{Source} \\
+\midrule
+LMSYS-Chat-1M & 1M real LLM conversations for legitimate traffic modeling & \url{https://huggingface.co/datasets/lmsys/lmsys-chat-1m} \\
+\addlinespace
+WildChat & 1M ChatGPT conversations with metadata & \url{https://huggingface.co/datasets/allenai/WildChat-1M} \\
+\addlinespace
+OWASP LLM Top-10 & LLM10 model extraction threat taxonomy & \url{https://owasp.org/www-project-top-10-for-large-language-model-applications/} \\
+\addlinespace
+ModelShield & Output perturbation defense for API models & \url{https://github.com/ModelShield/modelshield} \\
+\addlinespace
+KnockoffNets & Model extraction via prediction APIs & \url{https://github.com/tribhuvanesh/knockoffnets} \\
+\addlinespace
+CIC-IoT-2023 & Network intrusion dataset for cross-domain validation & \url{https://www.unb.ca/cic/datasets/iotdataset-2023.html} \\
+\addlinespace
+TGB 2.0 & Temporal graph benchmarks & \url{https://tgb.complexdatalab.com/} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ============================================================
+\section{Expected Outcomes}
+% ============================================================
+
+\begin{enumerate}
+    \item \textbf{ODE-ExtractGuard System:} Production-ready detection achieving $\geq$94\% functional extraction detection, $\geq$88\% data extraction detection, $<$0.1\% FPR, with $<$30ms latency.
+    
+    \item \textbf{Extraction--Evasion Trade-off Theorem:} First formal impossibility result proving that effective extraction and reliable evasion of graph-based detection are fundamentally incompatible within bounded query budgets.
+    
+    \item \textbf{Behavioral Fingerprinting:} Novel Neural ODE-based user fingerprints capturing extraction-specific temporal dynamics (boundary probing, active learning, strategy evolution).
+    
+    \item \textbf{ExtractBench:} Public benchmark with $>$500 extraction campaigns against 65 target models, with evasion strategies and legitimate traffic.
+    
+    \item \textbf{Publications:} Target: USENIX Security, CCS, NeurIPS, KDD (2--3 papers).
+    
+    \item \textbf{Cross-domain Transfer:} Validated transfer to financial API fraud detection and healthcare data exfiltration monitoring.
+\end{enumerate}
+
+% ============================================================
+\section{Timeline}
+% ============================================================
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+\textbf{Period} & \textbf{Activities} \\
+\midrule
+Months 1--5 & API graph schema; decision-boundary estimation; feature engineering \\
+Months 4--10 & Neural ODE behavioral fingerprinting; CT-TGNN extension \\
+Months 6--14 & Extraction--evasion incompatibility theorem; Lipschitz certification \\
+Months 12--18 & ExtractBench construction; extraction campaign simulation \\
+Months 16--22 & Production deployment; latency optimization; cross-domain validation \\
+Months 20--24 & Paper writing; open-source release \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ============================================================
+\section{Relation to Prior Work by the PI}
+% ============================================================
+
+\begin{itemize}
+    \item \textbf{CT-TGNN} $\to$ Neural ODE dynamics for continuous-time behavioral modeling of API users; multi-scale time constants capture extraction strategy phases.
+    \item \textbf{Lipschitz certification} $\to$ Gr\"onwall-based bounds enable the extraction--evasion impossibility proof.
+    \item \textbf{RobustIDPS.ai} $\to$ Production deployment architecture; real-time processing pipeline.
+    \item \textbf{CyberSecLLM} $\to$ Semantic analysis of query content for intent classification.
+    \item \textbf{Game-theoretic certification} $\to$ Stackelberg game formulation of extractor vs.\ detector.
+\end{itemize}
+
+\vspace{1cm}
+\hrule
+\vspace{0.3cm}
+\begin{center}
+\textit{End of Proposal 5}
+\end{center}
+
+\end{document}
