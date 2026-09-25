@@ -4,10 +4,10 @@
 
 This repository is the official reproducibility package for the manuscript:
 
-> Anaedevha, R. N. *Stochastic ODE-Guard: A Neural Stochastic Differential Equation Framework with Anti-Concentration Bounds for Adversarially Robust Network Intrusion Detection.* Submitted to IEEE Transactions on Neural Networks and Learning Systems (TNNLS), 2026.
+> *Stochastic ODE-Guard: A Neural Stochastic Differential Equation Framework with Anti-Concentration Bounds for Adversarially Robust Network Intrusion Detection.* Submitted to IEEE Transactions on Neural Networks and Learning Systems (TNNLS), 2026.
 
 It accompanies the LaTeX manuscript hosted at
-[`rogerpanel/SODE-ExtractGuard-Models`](https://github.com/rogerpanel/SODE-ExtractGuard-Models) and extends the
+[`rogerpanel/SODE-ExtractGuard-Models`](https://github.com/r/SODE-ExtractGuard-Models) and extends the
 `robustidps.ai` v3 deployment platform documented in the same upstream repository. SODE-Guard is registered as
 the temporal-stochastic detector inside the broader RobustIDPS ensemble alongside SurrogateIDS-7B, SDE-TGNN,
 SSL-GraphAnomaly, PPFOT-IDS, LipMamba, Mamba–CrossAttn–MoE, and the federated graph-temporal-dynamics
@@ -113,8 +113,8 @@ on all three Kaggle benchmarks.
   title  = {Stochastic ODE-Guard: A Neural Stochastic Differential Equation Framework
             with Anti-Concentration Bounds for Adversarially Robust Network
             Intrusion Detection},
-  author = {Anaedevha, Roger Nick},
-  journal= {IEEE Transactions on Neural Networks and Learning Systems (submitted)},
+  author = {...},
+  journal= {ICLR (submitted)},
   year   = {2026}
 }
 ```
