@@ -1,5 +1,5 @@
 """SurrogateIDS-7B: 7-branch ensemble used as the deployment teacher
-in RobustIDPS v3 (97.8 % clean accuracy, 0.976 F1). Each branch is a small
+in a deployed IDPS (97.8 % clean accuracy, 0.976 F1). Each branch is a small
 MLP specialised on a feature group from ``feature_engineering.FEATURE_GROUPS``;
 the gate mixes them with a softmax over per-branch confidences.
 """

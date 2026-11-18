@@ -1,4 +1,4 @@
-"""IDS-GraphMamba — selective-state-space baseline registered in RobustIDPS.
+"""IDS-GraphMamba — selective-state-space baseline registered in the deployment platform.
 
 This is a faithful re-implementation of the Mamba S6 selective scan adapted to
 83-dim flow vectors. The actual platform model uses the upstream
@@ -27,7 +27,7 @@ class _SelectiveScan(nn.Module):
         h = torch.zeros(B, self.d_state, device=u.device, dtype=u.dtype)
         ys = []
         for t in range(T):
-            dt = torch.softplus(ddt[:, t])               # (B, d_state)
+            dt = torch.nn.functional.softplus(ddt[:, t])               # (B, d_state)
             h = torch.exp(dt * A.mean(dim=0)) * h + dt * dB[:, t]
             y = self.out_proj(h * dC[:, t])              # (B, dim)
             ys.append(y + self.D * u[:, t])

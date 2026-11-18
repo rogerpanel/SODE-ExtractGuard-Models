@@ -29,6 +29,7 @@ encoder:                              # E-GraphSAGE edge encoder
   dropout: 0.10
   edge_features: 83
   output_dim: 128
+  certifiable: true                   # spectral-normalised encoder + head, no LayerNorm (Theorem A)
 
 sde:
   drift:
@@ -124,7 +125,7 @@ evaluation:
 
 deployment:
   registry_id: sode_guard
-  robustidps_category: temporal
+  deployment_category: temporal
   served_via: fastapi
   endpoint: /api/predict/sode_guard
   fast_mode: false                    # SODE-Guard always runs full MC for AC certificate

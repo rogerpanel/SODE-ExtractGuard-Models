@@ -1,4 +1,4 @@
-"""83-dim flow feature extraction shared by SODE-Guard and RobustIDPS.
+"""83-dim flow feature extraction shared by SODE-Guard and the deployment platform.
 
 Group breakdown (matches Appendix B of the manuscript):
 

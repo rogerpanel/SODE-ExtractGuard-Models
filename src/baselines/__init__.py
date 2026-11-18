@@ -6,9 +6,9 @@ Nine baselines in total:
     - E-GraphSAGE                     (Lopez-Martin et al., 2020)
     - RTIDS Transformer               (Wu et al., 2022)
     - CNN-LSTM                        (Vinayakumar et al., 2017)
-    - IDS-GraphMamba                  (this work / RobustIDPS internal)
+    - IDS-GraphMamba                  (this work / internal deployment)
 
-  Deployed detectors (RobustIDPS internal):
+  Deployed detectors (internal deployment):
     - SurrogateIDS-7B                 (7-branch ensemble)
     - SDE-TGNN                        (strongest baseline)
 
